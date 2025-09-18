@@ -1,4 +1,4 @@
-# Dreambirds in Motion: AI-Driven Surreal Bird Video Generation
+# Dreambirds in Motion: Pose-Guided Surreal Bird Video Generation
 
 ## 1. Introduction
 This project explores whether skeleton-driven generative methods can produce **temporally coherent** and **stylistically consistent** bird motion videos.  
