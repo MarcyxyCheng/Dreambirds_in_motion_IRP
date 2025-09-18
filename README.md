@@ -1,5 +1,11 @@
 # Dreambirds in Motion: Pose-Guided Surreal Bird Video Generation
 
+<p align="center">
+  <img src="demo/video1.gif" alt="Demo video 1" width="230"/>
+  <img src="demo/video2.gif" alt="Demo video 2" width="230"/>
+  <img src="demo/video3.gif" alt="Demo video 3" width="230"/>
+</p>
+
 ## 1. Introduction
 This project explores whether skeleton-driven generative methods can produce **temporally coherent** and **stylistically consistent** bird motion videos.  
 We built a three-stage pipeline:
@@ -45,13 +51,9 @@ We demonstrate controllable and surreal bird motion videos:
 ![Demo video](demo/video2.gif)
 ![Demo video](demo/video3.gif) -->
 
-📷 <b>Demo Videos</b>:
 
-<p float="left">
-  <img src="demo/video1.gif" alt="Demo video 1" width="230"/>
-  <img src="demo/video2.gif" alt="Demo video 2" width="230"/>
-  <img src="demo/video3.gif" alt="Demo video 3" width="230"/>
-</p>
+
+
 
 🎨 **Screen shot of the WebUI I built for video quality evaluation**
 <div align="center">
