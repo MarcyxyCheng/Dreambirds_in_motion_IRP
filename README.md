@@ -48,9 +48,9 @@ We demonstrate controllable and surreal bird motion videos:
 📷 <b>Demo Videos</b>:
 
 <p float="left">
-  <img src="demo/video1.gif" alt="Demo video 1" width="300"/>
-  <img src="demo/video2.gif" alt="Demo video 2" width="300"/>
-  <img src="demo/video3.gif" alt="Demo video 3" width="300"/>
+  <img src="demo/video1.gif" alt="Demo video 1" width="230"/>
+  <img src="demo/video2.gif" alt="Demo video 2" width="230"/>
+  <img src="demo/video3.gif" alt="Demo video 3" width="230"/>
 </p>
 
 🎨 **Screen shot of the WebUI I built for video quality evaluation**
