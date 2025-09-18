@@ -1,0 +1,25 @@
+{
+  "default_labels": ["takeoff", "hovering", "gliding", "landing", "soaring", "perching"],
+  "items": [
+    { "name": "A_Purple_param1", "video": "clips/Purpleland000112.gif", "task": "A", "meta": {"bird": "Purple", "condition": "param1"} },
+    { "name": "A_Purple_param2", "video": "clips/Purpleland010110.gif", "task": "A", "meta": {"bird": "Purple", "condition": "param2"} },
+    { "name": "A_Purple_param3", "video": "clips/Purpleland010212.gif", "task": "A", "meta": {"bird": "Purple", "condition": "param3"} },
+    { "name": "A_Purple_param4", "video": "clips/Purpleland020113.gif", "task": "A", "meta": {"bird": "Purple", "condition": "param4"} },
+
+    { "name": "B_Black",   "video": "clips/Blackguide000112.gif",  "task": "B", "meta": {"bird": "Black"} },
+    { "name": "B_Purple",  "video": "clips/Purpleland000112.gif",  "task": "B", "meta": {"bird": "Purple"} },
+    { "name": "B_Rainbow", "video": "clips/Rainbowhove000112.gif", "task": "B", "meta": {"bird": "Rainbow"} },
+    { "name": "B_Red",     "video": "clips/RedLand000112.gif",     "task": "B", "meta": {"bird": "Red"} },
+
+    { "name": "C_Black",   "video": "clips/Blackglide000112.gif",   "task": "C", "true_label": "gliding",  "meta": {"bird": "Black"} },
+    { "name": "C_Purple",  "video": "clips/Purpleland000112.gif",   "task": "C", "true_label": "landing",  "meta": {"bird": "Purple"} },
+    { "name": "C_Rainbow","video": "clips/Rainbowhove000112.gif",  "task": "C", "true_label": "hovering", "meta": {"bird": "Rainbow"} },
+
+    { "name": "D_Black",   "video": "clips/Blackglide000112cub15.gif",  "task": "D", "meta": {"bird": "Black",   "skeleton_type": "CUB-15"} },
+    { "name": "D_Black",   "video": "clips/Blackglide000112cubop9.gif", "task": "D", "meta": {"bird": "Black",   "skeleton_type": "OP-9"} },
+    { "name": "D_Purple",  "video": "clips/Purpleland000112cub15.gif",  "task": "D", "meta": {"bird": "Purple",  "skeleton_type": "CUB-15"} },
+    { "name": "D_Purple",  "video": "clips/Purpleland000112op9.gif",    "task": "D", "meta": {"bird": "Purple",  "skeleton_type": "OP-9"} },
+    { "name": "D_Rainbow", "video": "clips/Rainbowhove000112cub15.gif", "task": "D", "meta": {"bird": "Rainbow", "skeleton_type": "CUB-15"} },
+    { "name": "D_Rainbow", "video": "clips/Rainbowhove000112op9.gif",   "task": "D", "meta": {"bird": "Rainbow", "skeleton_type": "OP-9"} }
+  ]
+}

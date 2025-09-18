@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dreambirds in Motion — MOS Experiments UI</title>
+<style>
+  :root{--bg:#0b0c10;--card:#14171a;--ink:#e8edf3;--muted:#a7b0bb;--accent:#6ee7ff;}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
+  .wrap{max-width:950px;margin:16px auto;padding:0 14px}
+  h1{font-size:22px;margin:0 0 6px}
+  .card{background:#13181f;border:1px solid #232a35;border-radius:14px;padding:12px;margin:10px 0}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .btn{background:#1a1f27;border:1px solid #2a313d;color:var(--ink);padding:8px 12px;border-radius:10px;cursor:pointer}
+  .btn.primary{background:linear-gradient(90deg,#6ee7ff,#c7f36e);color:#0b0c10;font-weight:700;border:none}
+  .ghost{background:transparent;border:1px solid #2a313d;border-radius:10px;color:var(--ink);padding:8px 12px;cursor:pointer}
+  .sp{flex:1}
+  /* Media area */
+  .media{width:100%;height:360px;background:#0b0d12;border-radius:10px;display:flex;
+         align-items:center;justify-content:center;overflow:hidden;position:relative}
+  .media video,.media img{max-height:360px;max-width:100%;display:block;margin:auto}
+  .crit{display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px}
+  .item{background:#0f1218;border:1px solid #202633;border-radius:10px;padding:8px}
+  .label{font-size:14px;margin-bottom:6px}
+  .scale{display:flex;gap:6px}
+  .scale button{flex:1;padding:8px;border-radius:8px;border:1px solid #2a313d;background:#151a22;color:#e6ecf3;cursor:pointer}
+  .scale button.active{border-color:var(--accent);outline:2px solid rgba(110,231,255,.35)}
+  #idx{opacity:.8}
+  #status{color:var(--muted);margin-top:6px}
+  .mini{font-size:12px;color:var(--muted)}
+  .labels{display:flex;flex-wrap:wrap;gap:8px}
+  .labels button{padding:8px 10px;border-radius:8px;border:1px solid #2a313d;background:#151a22;color:#e6ecf3;cursor:pointer}
+  .labels button.active{border-color:#6ee7ff;outline:2px solid rgba(110,231,255,.35)}
+  .pill{font-size:12px;padding:4px 8px;border:1px solid #33414f;border-radius:999px;background:#0f141b;color:#c6d0dc}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Dreambirds in Motion — MOS Experiments UI</h1>
+
+  <div class="card">
+    <div class="row">
+      <label class="btn">Load config.json <input id="cfg" type="file" accept="application/json" hidden></label>
+      <button id="sample" class="ghost">Use sample</button>
+      <button id="shuffle" class="ghost">Shuffle order</button>
+      <div class="sp"></div>
+      <label>Rater ID: <input id="rater" placeholder="anonymous"></label>
+    </div>
+    <div class="mini">Supports GIF (no controls) and MP4/WebM (with controls). Paths are relative to index.html. Task C adds a 6-class label choice.</div>
+  </div>
+
+  <div class="card">
+    <div class="row" style="margin-bottom:6px">
+      <span id="idx">–/–</span>
+      <span id="task" class="pill">Task –</span>
+      <span id="name" style="margin-left:8px">No item</span>
+      <div class="sp"></div>
+      <button id="prev" class="ghost">← Prev</button>
+      <button id="next" class="ghost">Next →</button>
+    </div>
+
+    <div id="media" class="media"></div>
+
+    <div id="crit" class="crit"></div>
+
+    <div id="labelWrap" class="item" style="display:none;margin-top:8px">
+      <div class="label">Task C: choose the perceived action label (pick one)</div>
+      <div id="labels" class="labels"></div>
+    </div>
+
+    <div class="row" style="margin-top:8px">
+      <button id="submit" class="btn primary">Submit & Next</button>
+      <div class="sp"></div>
+      <button id="save" class="btn">Save</button>
+      <button id="export" class="btn">Export CSV</button>
+    </div>
+    <div id="status"></div>
+  </div>
+
+  <div class="mini card">
+    Scoring (1–5): Motion fidelity to skeleton, Temporal smoothness, Appearance consistency, Surreal trait preservation.<br>
+    Keyboard: 1–5 score, ←/→ prev/next. Space toggles video play/pause (video items only).
+  </div>
+</div>
+
+<script>
+const CRITS=[
+  {key:"motion_fidelity",label:"Motion fidelity to skeleton (1–5)"},
+  {key:"temporal_smoothness",label:"Temporal smoothness (1–5)"},
+  {key:"appearance_consistency",label:"Appearance consistency (1–5)"},
+  {key:"surreal_trait_preservation",label:"Surreal trait preservation (1–5)"}
+];
+
+let state={items:[],order:[],i:0,ratings:{},defaultLabels:["takeoff","hovering","gliding","landing","soaring","perching"]};
+
+const el={
+  cfg:document.getElementById("cfg"),
+  sample:document.getElementById("sample"),
+  shuffle:document.getElementById("shuffle"),
+  rater:document.getElementById("rater"),
+  idx:document.getElementById("idx"),
+  task:document.getElementById("task"),
+  name:document.getElementById("name"),
+  media:document.getElementById("media"),
+  crit:document.getElementById("crit"),
+  labelWrap:document.getElementById("labelWrap"),
+  labels:document.getElementById("labels"),
+  submit:document.getElementById("submit"),
+  prev:document.getElementById("prev"),
+  next:document.getElementById("next"),
+  save:document.getElementById("save"),
+  export:document.getElementById("export"),
+  status:document.getElementById("status")
+};
+
+function mkCritUI(){
+  el.crit.innerHTML="";
+  CRITS.forEach(c=>{
+    const wrap=document.createElement("div"); wrap.className="item";
+    const lab=document.createElement("div"); lab.className="label"; lab.textContent=c.label; wrap.appendChild(lab);
+    const row=document.createElement("div"); row.className="scale";
+    for(let k=1;k<=5;k++){const b=document.createElement("button"); b.textContent=k;
+      b.onclick=()=>setScore(c.key,k); b.dataset.k=c.key; b.dataset.v=k; row.appendChild(b);}
+    wrap.appendChild(row);
+    el.crit.appendChild(wrap);
+  });
+}
+
+function mkLabelUI(options){
+  el.labels.innerHTML="";
+  options.forEach(opt=>{
+    const b=document.createElement("button"); b.textContent=opt;
+    b.onclick=()=>setChosenLabel(opt); b.dataset.v=opt; el.labels.appendChild(b);
+  });
+}
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function current(){ if(state.order.length===0) return null; return state.items[state.order[state.i]] }
+function isGif(path){ return typeof path==="string" && path.toLowerCase().endsWith(".gif") }
+
+function render(){
+  const it=current(); const n=state.order.length;
+  if(!it){ el.idx.textContent="–/–"; el.name.textContent="No item"; el.task.textContent="Task –"; el.media.innerHTML=""; return }
+  el.idx.textContent=`${state.i+1}/${n}`; el.name.textContent=it.name||"(unnamed)"; el.task.textContent=`Task ${it.task || '-'}`;
+
+  // Render media: GIF -> <img>, Video -> <video controls>
+  el.media.innerHTML="";
+  const src = it.video;
+  if(isGif(src)){
+    const img=document.createElement("img");
+    img.src=src; img.alt="animated gif"; el.media.appendChild(img);
+  }else{
+    const video=document.createElement("video");
+    video.src=src; video.controls=true; video.playsInline=true; el.media.appendChild(video);
+  }
+
+  refreshScores();
+  if(it.task==="C"){
+    el.labelWrap.style.display="";
+    const opts = (it.label_options && it.label_options.length) ? it.label_options : state.defaultLabels;
+    mkLabelUI(opts); refreshChosenLabel();
+  } else el.labelWrap.style.display="none";
+}
+
+function setScore(key,val){ const it=current(); if(!it) return; (state.ratings[it.name]??={})[key]=val; refreshScores() }
+function refreshScores(){ const it=current(); const s=it?(state.ratings[it.name]||{}):{};
+  document.querySelectorAll(".scale button").forEach(b=>{ const k=b.dataset.k, v=Number(b.dataset.v);
+    if(s[k]===v) b.classList.add("active"); else b.classList.remove("active"); });
+}
+function setChosenLabel(v){ const it=current(); if(!it) return; (state.ratings[it.name]??={}).chosen_label=v; refreshChosenLabel() }
+function refreshChosenLabel(){ const it=current(); const s=it?(state.ratings[it.name]||{}):{};
+  document.querySelectorAll("#labels button").forEach(b=>{ if(s.chosen_label===b.dataset.v) b.classList.add("active"); else b.classList.remove("active"); });
+}
+
+function requireComplete(){
+  const it=current(); if(!it) return false;
+  const s=state.ratings[it.name]||{};
+  for(const c of CRITS){ if(!(c.key in s)) { alert("Please finish all four scores (1–5)."); return false; } }
+  if(it.task==="C" && !s.chosen_label){ alert("Task C requires choosing one label."); return false; }
+  return true;
+}
+
+function saveLocal(){
+  localStorage.setItem("dreambirds_mos_en_np", JSON.stringify({ratings:state.ratings,order:state.order,i:state.i,rater:el.rater.value}));
+  el.status.textContent="Saved."; setTimeout(()=>el.status.textContent="",900);
+}
+function loadLocal(){
+  try{const x=JSON.parse(localStorage.getItem("dreambirds_mos_en_np")||"null");
+    if(!x) return; state.ratings=x.ratings||{}; state.order=x.order||state.order; state.i=x.i||0; el.rater.value=x.rater||"";
+  }catch(e){}
+}
+
+function exportCSV(){
+  const rows=[];
+  for(const it of state.items){
+    const s=state.ratings[it.name]||{};
+    rows.push({
+      rater: el.rater.value || "anonymous",
+      task: it.task || "",
+      clip_name: it.name || "",
+      media: it.video || "",
+      condition: it.meta && it.meta.condition ? it.meta.condition : "",
+      skeleton_type: it.meta && it.meta.skeleton_type ? it.meta.skeleton_type : "",
+      true_label: it.true_label || "",
+      chosen_label: s.chosen_label || "",
+      motion_fidelity: s.motion_fidelity ?? "",
+      temporal_smoothness: s.temporal_smoothness ?? "",
+      appearance_consistency: s.appearance_consistency ?? "",
+      surreal_trait_preservation: s.surreal_trait_preservation ?? ""
+    });
+  }
+  const headers=["rater","task","clip_name","media","condition","skeleton_type","true_label","chosen_label","motion_fidelity","temporal_smoothness","appearance_consistency","surreal_trait_preservation"];
+  const csv=[headers.join(",")].concat(rows.map(r=>headers.map(h=>`"${(r[h]??"").toString().replaceAll('"','""')}"`).join(","))).join("\n");
+  const blob=new Blob([csv],{type:"text/csv"}); const url=URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url; a.download="dreambirds_mos_results.csv"; a.click(); URL.revokeObjectURL(url);
+}
+
+function loadCfgObject(obj){
+  state.items = obj.items || [];
+  if (obj.default_labels && Array.isArray(obj.default_labels) && obj.default_labels.length) state.defaultLabels = obj.default_labels;
+  state.order = state.items.map((_,i)=>i);
+  state.i = 0;
+  render();
+}
+
+document.getElementById("cfg").addEventListener("change", (e)=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>{ try{ loadCfgObject(JSON.parse(ev.target.result)); saveLocal(); } catch{ alert("Invalid JSON"); } };
+  r.readAsText(f);
+});
+
+document.getElementById("sample").addEventListener("click", ()=> loadCfgObject(SAMPLE_CFG));
+
+document.getElementById("shuffle").addEventListener("click", ()=>{
+  state.order = state.order.sort(()=>Math.random()-0.5);
+  state.i=0; render(); saveLocal();
+});
+
+document.getElementById("prev").addEventListener("click", ()=>{ if(state.i>0){ state.i--; render(); saveLocal(); } });
+document.getElementById("next").addEventListener("click", ()=>{ if(state.i<state.order.length-1){ state.i++; render(); saveLocal(); } });
+
+document.getElementById("submit").addEventListener("click", ()=>{ if(!requireComplete()) return; saveLocal();
+  if(state.i<state.order.length-1){ state.i++; render(); } else { alert("Done! Please export CSV."); } });
+
+document.getElementById("save").addEventListener("click", saveLocal);
+document.getElementById("export").addEventListener("click", exportCSV);
+
+document.addEventListener("keydown", (e)=>{
+  if(["INPUT","TEXTAREA"].includes(document.activeElement.tagName)) return;
+  const it=current();
+  if(e.code==="Space" && it && !isGif(it.video)){
+    e.preventDefault();
+    const v = el.media.querySelector("video");
+    if(v){ if(v.paused) v.play(); else v.pause(); }
+  } else if(e.key==="ArrowRight"){ e.preventDefault(); if(state.i<state.order.length-1){ state.i++; render(); saveLocal(); } }
+  else if(e.key==="ArrowLeft"){ e.preventDefault(); if(state.i>0){ state.i--; render(); saveLocal(); } }
+  else if(["1","2","3","4","5"].includes(e.key)){
+    const s=it?(state.ratings[it.name]||{}):{};
+    const order = ["motion_fidelity","temporal_smoothness","appearance_consistency","surreal_trait_preservation"];
+    const target = order.find(k=>!(k in s)) || order[0];
+    setScore(target, Number(e.key));
+  }
+});
+
+// Sample config
+const SAMPLE_CFG = {
+  "default_labels": ["takeoff","hovering","gliding","landing","soaring","perching"],
+  "items": [
+    {"name":"A_Purple_param1","video":"clips/Purpleland000112.gif","task":"A"},
+    {"name":"B_Black","video":"clips/Blackguide000112.gif","task":"B"},
+    {"name":"C_Rainbow_hovering","video":"clips/Rainbowhove000112.gif","task":"C","true_label":"hovering"},
+    {"name":"D_Purple_OP9","video":"clips/Purpleland000112op9.gif","task":"D","meta":{"skeleton_type":"OP-9"}},
+    {"name":"D_Purple_CUB15","video":"clips/Purpleland000112cub15.gif","task":"D","meta":{"skeleton_type":"CUB-15"}}
+  ]
+};
+
+(function init(){ mkCritUI(); render(); loadLocal(); })();
+</script>
+</body>
+</html>
