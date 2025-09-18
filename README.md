@@ -7,6 +7,13 @@ We built a three-stage pipeline:
 2. **Motion Diffusion Model (MDM)** for generating pose sequences.
 3. **AnimateDiff + ControlNet** for rendering skeleton-guided surreal bird videos.
 
+To support training and evaluation, we created a custom dataset **SynCUB15**, derived from the [CUB-200-2011 dataset](http://www.vision.caltech.edu/visipedia/CUB-200-2011.html).  
+
+- **CUB-15 Skeleton Definition**: 15 annotated bird keypoints (beak, crown, nape, back, tail, left/right wings, legs, etc.), designed specifically for bird morphology.  
+- **COCO-format Conversion**: All annotations were converted into COCO JSON format with skeleton topology, enabling training in [MMPose](https://github.com/open-mmlab/mmpose).  
+- **Biomechanical Augmentation**: Synthetic variations were generated with constraints on wing angles, body jitter, and symmetry to enrich motion diversity.  
+- **Quality Checks**: Scripts ensure annotation consistency, correct skeleton connectivity, and visualization for manual verification.  
+
 The aim is to combine scientific modelling of motion with artistic freedom, inspired by the *Birds of the British Empire* project.
 
 ---
@@ -48,7 +55,7 @@ We demonstrate controllable and surreal bird motion videos:
 
 🎨 **Screen shot of the WebUI I built for video quality evaluation**
 <div align="center">
-  <img src="demo/webUI.png" alt="WebUI" width="600"/>
+  <img src="demo/WebUI.png" alt="WebUI" width="600"/>
 </div>
 
 ---
